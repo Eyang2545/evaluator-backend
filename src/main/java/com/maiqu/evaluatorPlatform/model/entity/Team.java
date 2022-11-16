@@ -2,7 +2,9 @@ package com.maiqu.evaluatorPlatform.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.maiqu.evaluatorPlatform.model.common.Shared;
+import com.maiqu.evaluatorPlatform.model.vo.TeamVO;
 import lombok.Data;
+import org.springframework.beans.BeanUtils;
 
 import java.util.Date;
 
@@ -33,6 +35,7 @@ public class Team extends Shared {
     protected Integer teamCycle;
 
 
+
     /**
      * 终止时间
      */
@@ -43,6 +46,11 @@ public class Team extends Shared {
      */
     protected String teamName;
 
-
+    public TeamVO toVo(){
+        TeamVO teamVO = new TeamVO();
+        BeanUtils.copyProperties(this,teamVO);
+        teamVO.setStartTime(this.createTime);
+        return teamVO;
+    }
 
 }

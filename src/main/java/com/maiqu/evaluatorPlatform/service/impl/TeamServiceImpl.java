@@ -9,11 +9,13 @@ import com.maiqu.evaluatorPlatform.mapper.EvaluatorMapper;
 import com.maiqu.evaluatorPlatform.mapper.TeamMapper;
 import com.maiqu.evaluatorPlatform.model.entity.Evaluator;
 import com.maiqu.evaluatorPlatform.model.entity.Team;
+import com.maiqu.evaluatorPlatform.model.request.TeamAddRequest;
 import com.maiqu.evaluatorPlatform.model.update.TeamUpdateRequest;
 import com.maiqu.evaluatorPlatform.service.EvaluatorService;
 import com.maiqu.evaluatorPlatform.service.TeamService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -30,15 +32,16 @@ import java.util.Optional;
 public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements TeamService {
 
     @Override
-    public Long addTeam(Long evaluatorId, Team team) {
+    public Long addTeam(TeamAddRequest teamAddRequest) {
         //检验是否合法
-        checkLegal(evaluatorId,team);
+        checkLegal(teamAddRequest);
 
 
         //偏移时间，根据项目周期，设置开始和结束时间
-        Date endTime = DateUtil.offsetDay(DateUtil.date(),team.getTeamCycle());
+        Date endTime = DateUtil.offsetDay(DateUtil.date(),teamAddRequest.getTeamCycle());
+        Team team = new Team();
+        BeanUtils.copyProperties(teamAddRequest,team);
         team.setEndTime(endTime);
-        team.setEvaluatorId(evaluatorId);
 
         boolean isSave = save(team);
         if(!isSave){
@@ -97,24 +100,25 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     }
 
 
-    private void checkLegal(Long evaluatorId,Team team){
-        if(evaluatorId == null || team == null){
+    private void checkLegal(TeamAddRequest teamAddRequest){
+        Long evaluatorId = teamAddRequest.getEvaluatorId();
+        if(evaluatorId == null || teamAddRequest == null){
             throw new BusinessException(ErrorCode.PARAMS_NULL_ERROR);
         }
 
-        if(StringUtils.isEmpty(team.getTeamName()) || team.getTeamName().length() >= 10){
+        if(StringUtils.isEmpty(teamAddRequest.getTeamName()) || teamAddRequest.getTeamName().length() >= 10){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"队伍不规范");
         }
 
-        if(team.getTeamNumber()<=0){
+        if(teamAddRequest.getTeamNumber()<=0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"创建队伍的数量小于等于0");
         }
 
-        if(team.getTeamCycle()<=0){
+        if(teamAddRequest.getTeamCycle()<=0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"创建队伍的周期太短啦");
         }
 
-        if(StringUtils.isEmpty(team.getDescription())){
+        if(StringUtils.isEmpty(teamAddRequest.getDescription())){
             throw new BusinessException(ErrorCode.PARAMS_NULL_ERROR);
         }
     }
